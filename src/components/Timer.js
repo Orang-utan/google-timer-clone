@@ -4,39 +4,40 @@ class Timer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      time: 0,
+      timerStarted: false,
+      deadline: 0,
+      addedTime: 0,
+      timeDiff: 0,
       hours: 0,
       minutes: 0,
-      seconds: 0,
-      timerStarted: false
+      seconds: 0
     };
     this.handleChange = this.handleChange.bind(this);
   }
 
-  startTimer(addedTime) {
-    if (this.state.timerStarted) {
-      return;
+  toggleTimer() {
+    var deadline;
+    if (this.state.timeDiff !== 0) {
+      deadline = new Date().getTime() + this.state.timeDiff;
+    } else {
+      deadline = new Date().getTime() + this.state.addedTime;
+      console.log(deadline);
     }
-    this.setState({ timerStarted: true });
-    var deadline = new Date().getTime() + addedTime;
     setInterval(() => {
-      var now = new Date().getTime();
-      var t = deadline - now;
-      if (t < 0) {
-        clearInterval();
-        this.setState({ timerStarted: false });
-        return;
-      }
-      this.setState({ time: t });
-    }, 1000);
+      const now = new Date().getTime();
+      const timeDiff = deadline - now;
+      this.setState({ timeDiff: timeDiff });
+    }, 1);
   }
 
-  handleStart() {
+  toggleStart() {
+    this.setState({ timerStarted: !this.state.timerStarted });
     const addedTime =
       this.state.seconds * 1000 +
       this.state.minutes * 1000 * 60 +
       this.state.hours * 1000 * 60 * 60 * 24;
-    this.startTimer(addedTime);
+    this.setState({ addedTime: addedTime });
+    this.toggleTimer();
   }
 
   handleReset() {}
@@ -46,13 +47,15 @@ class Timer extends React.Component {
   }
 
   render() {
-    const t = this.state.time;
+    const t = this.state.timeDiff;
     var days = Math.floor(t / (1000 * 60 * 60 * 24));
     var hours = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     var minutes = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
     var seconds = Math.floor((t % (1000 * 60)) / 1000);
     const timeStr =
       days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+
+    const startButton = this.state.timerStarted ? "Pause" : "Start";
     return (
       <div className="timer">
         <h2>Timer</h2>
@@ -72,8 +75,8 @@ class Timer extends React.Component {
           </label>
           <input
             type="button"
-            value="Start"
-            onClick={() => this.handleStart()}
+            value={startButton}
+            onClick={() => this.toggleStart()}
           />
           <input
             type="button"
