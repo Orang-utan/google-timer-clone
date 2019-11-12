@@ -12,11 +12,12 @@ class Stopwatch extends React.Component {
 
   toggleStopwatch() {
     this.setState({ startTime: new Date().getTime() - this.state.elapsedTime });
-    setInterval(() => {
+    let stopWatch = setInterval(() => {
       if (!this.state.stopwatchStarted) {
-        clearInterval();
+        clearInterval(stopWatch);
         return;
       }
+
       var now = new Date().getTime();
       this.setState({
         elapsedTime: now - this.state.startTime

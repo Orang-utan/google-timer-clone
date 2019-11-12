@@ -5,8 +5,6 @@ class Timer extends React.Component {
     super(props);
     this.state = {
       timerStarted: false,
-      deadline: 0,
-      addedTime: 0,
       timeDiff: 0,
       hours: 0,
       minutes: 0,
@@ -16,14 +14,30 @@ class Timer extends React.Component {
   }
 
   toggleTimer() {
-    var deadline;
-    if (this.state.timeDiff !== 0) {
-      deadline = new Date().getTime() + this.state.timeDiff;
-    } else {
-      deadline = new Date().getTime() + this.state.addedTime;
-      console.log(deadline);
+    console.log(this.state);
+    var deadline = new Date().getTime() + this.state.timeDiff;
+    if (this.state.timeDiff === 0) {
+      const addedTime =
+        this.state.seconds * 1000 +
+        this.state.minutes * 1000 * 60 +
+        this.state.hours * 1000 * 60 * 60;
+      deadline = new Date().getTime() + addedTime;
     }
-    setInterval(() => {
+    let timer = setInterval(() => {
+      console.log(this.state);
+      if (!this.state.timerStarted) {
+        clearInterval(timer);
+        return;
+      }
+
+      if (this.state.timeDiff < 0) {
+        clearInterval(timer);
+        this.setState({
+          timerStarted: false,
+          timeDiff: 0
+        });
+        return;
+      }
       const now = new Date().getTime();
       const timeDiff = deadline - now;
       this.setState({ timeDiff: timeDiff });
@@ -31,16 +45,23 @@ class Timer extends React.Component {
   }
 
   toggleStart() {
-    this.setState({ timerStarted: !this.state.timerStarted });
     const addedTime =
       this.state.seconds * 1000 +
       this.state.minutes * 1000 * 60 +
-      this.state.hours * 1000 * 60 * 60 * 24;
-    this.setState({ addedTime: addedTime });
+      this.state.hours * 1000 * 60 * 60;
+    if (addedTime === 0) {
+      return;
+    }
+    this.setState({ timerStarted: !this.state.timerStarted });
     this.toggleTimer();
   }
 
-  handleReset() {}
+  handleReset() {
+    this.setState({
+      timerStarted: false,
+      timeDiff: 0
+    });
+  }
 
   handleChange(evt) {
     this.setState({ [evt.target.name]: evt.target.value });
@@ -48,12 +69,22 @@ class Timer extends React.Component {
 
   render() {
     const t = this.state.timeDiff;
-    var days = Math.floor(t / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var minutes = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((t % (1000 * 60)) / 1000);
-    const timeStr =
-      days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+    var days;
+    var hours;
+    var minutes;
+    var seconds;
+    if (t > 0) {
+      days = Math.floor(t / (1000 * 60 * 60 * 24));
+      hours = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      minutes = Math.floor((t % (1000 * 60 * 60)) / (1000 * 60));
+      seconds = Math.floor((t % (1000 * 60)) / 1000);
+    } else {
+      days = 0;
+      hours = 0;
+      minutes = 0;
+      seconds = 0;
+    }
+    var timeStr = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
 
     const startButton = this.state.timerStarted ? "Pause" : "Start";
     return (
@@ -61,18 +92,34 @@ class Timer extends React.Component {
         <h2>Timer</h2>
         <h4>Time Remaining: {timeStr}</h4>
         <form>
-          <label>
-            Hours:
-            <input type="text" name="hours" onChange={this.handleChange} />
-          </label>
-          <label>
-            Minutes:
-            <input type="text" name="minutes" onChange={this.handleChange} />
-          </label>
-          <label>
-            Seconds:
-            <input type="text" name="seconds" onChange={this.handleChange} />
-          </label>
+          <ul>
+            <li>
+              <label>
+                Hours:
+                <input type="text" name="hours" onChange={this.handleChange} />
+              </label>
+            </li>
+            <li>
+              <label>
+                Minutes:
+                <input
+                  type="text"
+                  name="minutes"
+                  onChange={this.handleChange}
+                />
+              </label>
+            </li>
+            <li>
+              <label>
+                Seconds:
+                <input
+                  type="text"
+                  name="seconds"
+                  onChange={this.handleChange}
+                />
+              </label>
+            </li>
+          </ul>
           <input
             type="button"
             value={startButton}
